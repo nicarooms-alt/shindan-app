@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>潜在意識タイプ診断 ✨ | にか</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #f0eeff 0%, #e8f4f8 50%, #fce8f3 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    .container { max-width: 480px; width: 100%; }
+
+    /* ========== START ========== */
+    #startScreen { text-align: center; padding: 48px 16px 32px; }
+    .start-logo { font-size: 56px; margin-bottom: 20px; }
+    .start-title {
+      font-size: 20px; font-weight: 700; color: #333;
+      line-height: 1.6; margin-bottom: 16px;
+    }
+    .start-title span { color: #85B5D3; }
+    .start-sub {
+      font-size: 14px; color: #666; line-height: 2;
+      margin-bottom: 32px;
+    }
+    .start-badges {
+      display: flex; justify-content: center; gap: 28px;
+      margin-bottom: 36px;
+    }
+    .badge { text-align: center; }
+    .badge-num { font-size: 28px; font-weight: 700; color: #85B5D3; }
+    .badge-label { font-size: 12px; color: #999; margin-top: 2px; }
+
+    /* ========== PROGRESS ========== */
+    #questionScreen { display: none; padding-top: 8px; }
+    .progress-meta {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #999; margin-bottom: 8px;
+    }
+    .progress-track {
+      height: 6px; background: #e4e4e4; border-radius: 3px;
+      overflow: hidden; margin-bottom: 24px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #85B5D3, #b8d8ec);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    /* ========== QUESTION ========== */
+    .q-card {
+      background: #fff; border-radius: 20px;
+      padding: 28px 22px; margin-bottom: 14px;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.07);
+    }
+    .q-num {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      color: #85B5D3; margin-bottom: 14px; text-transform: uppercase;
+    }
+    .q-text { font-size: 17px; font-weight: 500; color: #2d2d2d; line-height: 1.75; }
+
+    .choices { display: flex; flex-direction: column; gap: 10px; }
+    .choice-btn {
+      background: #fff; border: 1.5px solid #e8e8e8;
+      border-radius: 13px; padding: 15px 18px;
+      text-align: left; font-size: 14px; color: #444;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'Noto Sans JP', sans-serif;
+      display: flex; align-items: center; gap: 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .choice-btn:hover { border-color: #85B5D3; background: #f0f8fc; }
+    .choice-btn.selected {
+      border-color: #85B5D3;
+      background: linear-gradient(135deg, #85B5D3, #7aaec8);
+      color: #fff;
+    }
+    .choice-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid currentColor; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .choice-btn.selected .choice-dot::after {
+      content: ''; width: 8px; height: 8px;
+      background: #fff; border-radius: 50%;
+    }
+
+    /* ========== RESULT ========== */
+    #resultScreen { display: none; }
+    .result-top { text-align: center; padding: 36px 0 24px; }
+    .result-label { font-size: 13px; color: #999; margin-bottom: 12px; }
+    .result-emoji { font-size: 72px; display: block; margin-bottom: 14px; }
+    .result-tag {
+      display: inline-block; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; color: #fff; border-radius: 20px;
+      padding: 5px 16px; margin-bottom: 12px;
+    }
+    .result-name { font-size: 24px; font-weight: 700; color: #222; }
+
+    .r-card {
+      background: #fff; border-radius: 18px; padding: 22px 20px;
+      margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .r-card-title {
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      color: #85B5D3; margin-bottom: 12px;
+    }
+    .r-card p { font-size: 14px; color: #555; line-height: 1.95; }
+
+    .session-card { border-left: 4px solid #85B5D3; }
+    .session-name {
+      font-size: 16px; font-weight: 700; color: #333; margin-bottom: 10px;
+    }
+
+    /* Score bars */
+    .score-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 9px;
+    }
+    .score-name { font-size: 12px; color: #666; width: 120px; flex-shrink: 0; }
+    .score-track {
+      flex: 1; height: 8px; background: #f0f0f0;
+      border-radius: 4px; overflow: hidden;
+    }
+    .score-fill {
+      height: 100%; border-radius: 4px; width: 0%;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+    .score-val { font-size: 12px; color: #aaa; width: 20px; text-align: right; }
+
+    /* Buttons */
+    .btn-main {
+      width: 100%; border: none; border-radius: 14px;
+      padding: 18px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      color: #fff; transition: all 0.3s; letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.15); }
+    .btn-sub {
+      width: 100%; border: 1.5px solid #ddd; border-radius: 14px;
+      padding: 14px; font-size: 14px; color: #999; background: transparent;
+      cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-sub:hover { border-color: #85B5D3; color: #85B5D3; }
+
+    .footer-note {
+      text-align: center; font-size: 12px; color: #bbb;
+      margin-top: 16px; padding-bottom: 8px;
+    }
+
+    /* Animations */
+    .fade-up { animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== START SCREEN ===== -->
+  <div id="startScreen">
+    <div class="start-logo">🌟</div>
+    <h1 class="start-title">
+      潜在意識タイプ診断<br>
+      <span>あなたに必要なセッションは？</span>
+    </h1>
+    <p class="start-sub">
+      「なぜか同じことを繰り返してしまう」<br>
+      「やりたいのに動けない」<br>
+      「自分の気持ちがよくわからない」<br><br>
+      その根っこにある<strong>潜在意識のパターン</strong>を<br>
+      24の質問で明らかにします。
+    </p>
+    <div class="start-badges">
+      <div class="badge"><div class="badge-num">24</div><div class="badge-label">問</div></div>
+      <div class="badge"><div class="badge-num">3〜5</div><div class="badge-label">分</div></div>
+      <div class="badge"><div class="badge-num">8</div><div class="badge-label">タイプ</div></div>
+    </div>
+    <button class="btn-main" style="background: linear-gradient(135deg,#85B5D3,#6a9fbf)" onclick="startQuiz()">
+      診断をはじめる ✨
+    </button>
+    <p class="footer-note">by にか 🩵</p>
+  </div>
+
+  <!-- ===== QUESTION SCREEN ===== -->
+  <div id="questionScreen">
+    <div class="progress-meta">
+      <span id="qLabel">Q1 / 24</span>
+      <span id="qPct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="q-card fade-up" id="qCard">
+      <div class="q-num" id="qNum">QUESTION 01</div>
+      <p class="q-text" id="qText"></p>
+    </div>
+    <div class="choices" id="choicesWrap"></div>
+  </div>
+
+  <!-- ===== RESULT SCREEN ===== -->
+  <div id="resultScreen"></div>
+
+</div>
+
+<script>
+// =============================================
+// DATA
+// =============================================
+
+const QUESTIONS = [
+  { text:"「自分には無理かも」「どうせ私には…」と、行動する前に思ってしまう", type:0 },
+  { text:"「本当はどうしたいの？」と聞かれると、すぐに答えが出てこない", type:3 },
+  { text:"嫌だと思っても断れず、後から「なんで断れなかったんだろう」と後悔することがある", type:6 },
+  { text:"人に頼むより自分でやった方が早いと思い、つい一人で抱え込んでしまう", type:1 },
+  { text:"やりたいことがあるのに、なぜか最初の一歩が踏み出せない", type:4 },
+  { text:"何か失敗すると、必要以上に長く自分を責めてしまう", type:7 },
+  { text:"「またこのパターンか…」と、同じ状況や人間関係を繰り返している気がする", type:2 },
+  { text:"お金を受け取ることや「稼ぐ」ことに、なんとなく罪悪感がある", type:5 },
+  { text:"お金を稼ぐことに、どこかで「自分がそんなに稼いでいいのか」と感じることがある", type:0 },
+  { text:"自分の気持ちより、相手がどう思うかを先に考えてしまう", type:3 },
+  { text:"人に嫌われることが怖くて、本音が言えないことが多い", type:6 },
+  { text:"「大丈夫？」と聞かれると反射的に「大丈夫です」と答えてしまう", type:1 },
+  { text:"完璧にできないなら、やらない方がいいと思ってしまうことがある", type:4 },
+  { text:"「どうせ私なんて」「私には無理」という言葉が頭に浮かぶことが多い", type:7 },
+  { text:"過去の出来事が頭から離れず、今の行動に影響していると感じる", type:2 },
+  { text:"値段を見て「私には勿体ない」「私には合わない」と感じてしまうことがある", type:5 },
+  { text:"「もっとしっかりしなきゃ」と、常に自分にプレッシャーをかけている", type:0 },
+  { text:"感情を表に出すのが苦手で、いつも「平気なふり」をしてしまっている", type:3 },
+  { text:"過去に裏切られた経験から、人を信じることが難しくなっている", type:6 },
+  { text:"周りの人が幸せでないと、自分だけ幸せになってはいけない気がする", type:1 },
+  { text:"「いつかやろう」「準備ができたら」と先延ばしにしていることがある", type:4 },
+  { text:"自分のことを好きになれない、または自分に優しくすることが苦手だ", type:7 },
+  { text:"特定の場面や言葉で、急に気持ちが沈んだり体が固まったりすることがある", type:2 },
+  { text:"お金の話になると緊張したり、話題を変えたくなる気持ちがある", type:5 },
+];
+
+const CHOICES = [
+  { label:"すごくそう思う",  point:3 },
+  { label:"わりとそう思う",  point:2 },
+  { label:"少しそう思う",    point:1 },
+  { label:"あまり思わない",  point:0 },
+];
+
+const TYPES = [
+  {
+    emoji:"🔥", name:"お父さんの影響タイプ", color:"#FF9A3C",
+    desc:"あなたの「自信のなさ」「お金への不安」「頑張らなきゃ」という感覚の根っこには、お父さんとの関係性が深く影響しています。意識していなくても、お父さんから受け取った価値観が今の自分を動かしているかもしれません。それはあなたのせいではありません。",
+    session:"父親統合セッション",
+    sessionDesc:"お父さんとの関係を整理し、あなたの中に眠っている才能と自信を取り戻すセッションです。安全な場所で少しずつ過去と向き合いながら、「私は大丈夫」という感覚を育てていきます。",
+  },
+  {
+    emoji:"🌸", name:"お母さんの影響タイプ", color:"#F4A0B8",
+    desc:"あなたの「一人で頑張ってしまう」「我慢グセ」「人に頼れない」というパターンの根っこには、お母さんとの関係性が影響しています。いい子でいることが「安全」だと学んできたのかもしれません。本当は甘えたかった気持ちが、今も心の奥に眠っています。",
+    session:"母親統合セッション",
+    sessionDesc:"お母さんとの関係を整理し、「頼っていい」「我慢しなくていい」という安心感を取り戻すセッションです。本当は甘えたかった気持ちを、一緒に受け取り直していきましょう。",
+  },
+  {
+    emoji:"💭", name:"過去の記憶タイプ", color:"#B09FD8",
+    desc:"あなたの中には、まだ過去の出来事から受け取ったままの感情や信念が残っているようです。同じパターンを繰り返してしまうのは意志が弱いからではなく、潜在意識が過去の体験をもとに動いているからです。その記憶を書き換えることで、ループから抜け出せます。",
+    session:"リメージングセッション",
+    sessionDesc:"過去の辛い記憶を、潜在意識の中で安全に書き換えていくセッションです。記憶は消えませんが、その記憶への感情を変えることができます。「過去は変えられる」が合言葉です。",
+  },
+  {
+    emoji:"🌟", name:"本音抑圧タイプ", color:"#85B5D3",
+    desc:"あなたは長い間、自分の気持ちより周りを優先して生きてきたのかもしれません。「本当はどうしたいのか」がわからなくなるほど、本音に蓋をしてきた可能性があります。それはあなたが弱いのではなく、そうするしかなかった環境があったからです。",
+    session:"コア発掘セッション",
+    sessionDesc:"あなたの本音・コア（本当の望み）を一緒に掘り起こしていくセッションです。「私はこうしたい」という声を取り戻し、自分の軸で生きる第一歩を踏み出しましょう。",
+  },
+  {
+    emoji:"⚡", name:"行動ブレーキタイプ", color:"#F5C842",
+    desc:"やる気はあるのに動けない…それは意志力の問題ではありません。潜在意識の中に「動いてはいけない」「失敗したらどうしよう」というブレーキがかかっているのかもしれません。そのブレーキの場所がわかれば、動ける自分に変われます。",
+    session:"潜在意識スキャニング",
+    sessionDesc:"潜在意識のスキャニングで、あなたの行動を止めているブレーキの場所を特定し、解除していくセッションです。動ける自分が、もうすぐそこにいます。",
+  },
+  {
+    emoji:"💰", name:"お金ブロックタイプ", color:"#74C69D",
+    desc:"お金を受け取ることへの罪悪感、稼ぐことへの抵抗…これはあなたの性格ではなく、潜在意識に刻まれた「お金の設定」です。その設定を変えることで、豊かさを自然に受け取れるようになります。",
+    session:"お金統合セッション",
+    sessionDesc:"お金への恐れ・罪悪感の根っこを探り、豊かさを受け取れる自分に書き換えていくセッションです。「稼いでいい」「受け取っていい」を心から感じられるようになりましょう。",
+  },
+  {
+    emoji:"🤝", name:"人間関係タイプ", color:"#F4A261",
+    desc:"断れない、嫌われたくない、信じるのが怖い…これらは過去の人間関係の中でついた「傷」が影響しています。あなたは悪くない。ただ、心を守るための「壁」を作りすぎているだけかもしれません。",
+    session:"関係性統合セッション",
+    sessionDesc:"人間関係のパターンを整理し、安心して人と繋がれる自分を取り戻すセッションです。「信じていい」「頼っていい」という感覚を、一緒に育てていきましょう。",
+  },
+  {
+    emoji:"🪞", name:"自己否定タイプ", color:"#E08080",
+    desc:"自分を責める、自分を好きになれない…それは本当のあなたではありません。長い間、誰かの言葉や経験によって「私はダメだ」という設定が上書きされてきただけです。本来のあなたは、もっと輝いています。",
+    session:"セルフイメージ書き換えセッション",
+    sessionDesc:"「私はダメだ」という思い込みを根本から書き換え、自分を愛せる自分に戻るセッションです。あなたの中にいる「本当の私」に、もう一度会いに行きましょう。",
+  },
+];
+
+// =============================================
+// STATE
+// =============================================
+let cur = 0;
+let scores = [0,0,0,0,0,0,0,0];
+let locked = false;
+
+// =============================================
+// QUIZ LOGIC
+// =============================================
+
+function startQuiz() {
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('questionScreen').style.display = 'block';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  locked = false;
+  const q = QUESTIONS[cur];
+  const pct = Math.round((cur / QUESTIONS.length) * 100);
+
+  document.getElementById('qLabel').textContent = `Q${cur+1} / ${QUESTIONS.length}`;
+  document.getElementById('qPct').textContent = `${pct}%`;
+  document.getElementById('progressBar').style.width = `${pct}%`;
+  document.getElementById('qNum').textContent = `QUESTION ${String(cur+1).padStart(2,'0')}`;
+  document.getElementById('qText').textContent = q.text;
+
+  // Animate card
+  const card = document.getElementById('qCard');
+  card.classList.remove('fade-up');
+  void card.offsetWidth;
+  card.classList.add('fade-up');
+
+  // Render choices
+  const wrap = document.getElementById('choicesWrap');
+  wrap.innerHTML = '';
+  CHOICES.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-dot"></span><span>${c.label}</span>`;
+    btn.onclick = () => pick(i, c.point, q.type, btn);
+    wrap.appendChild(btn);
+  });
+}
+
+function pick(idx, point, typeIdx, btn) {
+  if (locked) return;
+  locked = true;
+  btn.classList.add('selected');
+  document.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
+  scores[typeIdx] += point;
+  setTimeout(() => {
+    cur++;
+    if (cur < QUESTIONS.length) renderQuestion();
+    else showResult();
+  }, 480);
+}
+
+// =============================================
+// RESULT
+// =============================================
+
+function showResult() {
+  document.getElementById('questionScreen').style.display = 'none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display = 'block';
+
+  const maxScore = Math.max(...scores);
+  const topIdx = scores.indexOf(maxScore);
+  const t = TYPES[topIdx];
+
+  rs.innerHTML = `
+    <div class="fade-up">
+      <div class="result-top">
+        <div class="result-label">あなたの潜在意識タイプは…</div>
+        <span class="result-emoji">${t.emoji}</span>
+        <div class="result-tag" style="background:${t.color}">${t.name}</div>
+        <div class="result-name">${t.name}</div>
+      </div>
+
+      <div class="r-card">
+        <div class="r-card-title">✦ あなたのパターン</div>
+        <p>${t.desc}</p>
+      </div>
+
+      <div class="r-card session-card" style="border-left-color:${t.color}">
+        <div class="r-card-title">✦ あなたに必要なセッション</div>
+        <div class="session-name">${t.session}</div>
+        <p>${t.sessionDesc}</p>
+      </div>
+
+      <div class="r-card">
+        <div class="r-card-title">✦ タイプ別スコア</div>
+        ${TYPES.map((tp,i) => `
+          <div class="score-row">
+            <div class="score-name">${tp.emoji} ${tp.name.replace('タイプ','')}</div>
+            <div class="score-track">
+              <div class="score-fill" id="sf${i}" style="background:${tp.color}"></div>
+            </div>
+            <div class="score-val">${scores[i]}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-main" style="background:linear-gradient(135deg,${t.color},${t.color}bb)"
+        onclick="window.open('YOUR_LINE_URL_HERE','_blank')">
+        🩵 無料体験セッションを申し込む
+      </button>
+      <button class="btn-sub" onclick="retry()">もう一度診断する</button>
+      <p class="footer-note">by にか 🩵</p>
+    </div>
+  `;
+
+  // Animate score bars after render
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      TYPES.forEach((_,i) => {
+        const el = document.getElementById(`sf${i}`);
+        if (el) el.style.width = `${Math.round((scores[i]/9)*100)}%`;
+      });
+    });
+  });
+}
+
+function retry() {
+  cur = 0;
+  scores = [0,0,0,0,0,0,0,0];
+  locked = false;
+  document.getElementById('resultScreen').style.display = 'none';
+  document.getElementById('startScreen').style.display = 'block';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
