@@ -70,7 +70,7 @@
     }
     .q-text { font-size: 17px; font-weight: 500; color: #2d2d2d; line-height: 1.75; }
 
-    .choices { display: flex; flex-direction: column; gap: 10px; }
+    .choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
     .choice-btn {
       background: #fff; border: 1.5px solid #e8e8e8;
       border-radius: 13px; padding: 15px 18px;
@@ -95,6 +95,28 @@
       content: ''; width: 8px; height: 8px;
       background: #fff; border-radius: 50%;
     }
+
+    /* ========== NAV BUTTONS ========== */
+    .nav-row {
+      display: flex; gap: 10px; margin-top: 4px;
+    }
+    .btn-back {
+      flex: 1; border: 1.5px solid #ddd; border-radius: 13px;
+      padding: 14px; font-size: 14px; color: #999; background: transparent;
+      cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.2s;
+    }
+    .btn-back:hover:not(:disabled) { border-color: #85B5D3; color: #85B5D3; }
+    .btn-back:disabled { opacity: 0.35; cursor: default; }
+    .btn-next {
+      flex: 2; border: none; border-radius: 13px;
+      padding: 14px; font-size: 15px; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #85B5D3, #6a9fbf);
+      cursor: pointer; font-family: 'Noto Sans JP', sans-serif;
+      transition: all 0.25s;
+    }
+    .btn-next:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(133,181,211,0.4); }
+    .btn-next:disabled { opacity: 0.35; cursor: default; transform: none; box-shadow: none; }
 
     /* ========== RESULT ========== */
     #resultScreen { display: none; }
@@ -121,6 +143,15 @@
     .session-card { border-left: 4px solid #85B5D3; }
     .session-name {
       font-size: 16px; font-weight: 700; color: #333; margin-bottom: 10px;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, #f0f8fc, #fce8f3);
+      border-radius: 18px; padding: 22px 20px;
+      margin-bottom: 14px; text-align: center;
+    }
+    .cta-card p {
+      font-size: 14px; color: #555; line-height: 2; margin-bottom: 0;
     }
 
     /* Score bars */
@@ -210,6 +241,10 @@
       <p class="q-text" id="qText"></p>
     </div>
     <div class="choices" id="choicesWrap"></div>
+    <div class="nav-row">
+      <button class="btn-back" id="backBtn" onclick="goBack()">← 戻る</button>
+      <button class="btn-next" id="nextBtn" onclick="goNext()" disabled>次へ →</button>
+    </div>
   </div>
 
   <!-- ===== RESULT SCREEN ===== -->
@@ -311,8 +346,7 @@ const TYPES = [
 // STATE
 // =============================================
 let cur = 0;
-let scores = [0,0,0,0,0,0,0,0];
-let locked = false;
+let answers = new Array(QUESTIONS.length).fill(null); // {choiceIdx, point}
 
 // =============================================
 // QUIZ LOGIC
@@ -325,7 +359,6 @@ function startQuiz() {
 }
 
 function renderQuestion() {
-  locked = false;
   const q = QUESTIONS[cur];
   const pct = Math.round((cur / QUESTIONS.length) * 100);
 
@@ -344,37 +377,66 @@ function renderQuestion() {
   // Render choices
   const wrap = document.getElementById('choicesWrap');
   wrap.innerHTML = '';
+  const saved = answers[cur];
   CHOICES.forEach((c, i) => {
     const btn = document.createElement('button');
-    btn.className = 'choice-btn';
+    btn.className = 'choice-btn' + (saved && saved.choiceIdx === i ? ' selected' : '');
     btn.innerHTML = `<span class="choice-dot"></span><span>${c.label}</span>`;
-    btn.onclick = () => pick(i, c.point, q.type, btn);
+    btn.onclick = () => pick(i, c.point, btn);
     wrap.appendChild(btn);
   });
+
+  // Back button
+  document.getElementById('backBtn').disabled = (cur === 0);
+  // Next button: enabled only if already answered
+  document.getElementById('nextBtn').disabled = (saved === null);
+  // Last question label
+  document.getElementById('nextBtn').textContent = (cur === QUESTIONS.length - 1) ? '結果を見る ✨' : '次へ →';
 }
 
-function pick(idx, point, typeIdx, btn) {
-  if (locked) return;
-  locked = true;
+function pick(idx, point, btn) {
+  answers[cur] = { choiceIdx: idx, point };
+  document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
-  document.querySelectorAll('.choice-btn').forEach(b => b.style.pointerEvents = 'none');
-  scores[typeIdx] += point;
-  setTimeout(() => {
-    cur++;
-    if (cur < QUESTIONS.length) renderQuestion();
-    else showResult();
-  }, 480);
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function goNext() {
+  if (answers[cur] === null) return;
+  cur++;
+  if (cur < QUESTIONS.length) {
+    renderQuestion();
+    window.scrollTo(0, 0);
+  } else {
+    showResult();
+  }
+}
+
+function goBack() {
+  if (cur === 0) return;
+  cur--;
+  renderQuestion();
+  window.scrollTo(0, 0);
 }
 
 // =============================================
 // RESULT
 // =============================================
 
+function calculateScores() {
+  const scores = [0,0,0,0,0,0,0,0];
+  answers.forEach((ans, i) => {
+    if (ans !== null) scores[QUESTIONS[i].type] += ans.point;
+  });
+  return scores;
+}
+
 function showResult() {
   document.getElementById('questionScreen').style.display = 'none';
   const rs = document.getElementById('resultScreen');
   rs.style.display = 'block';
 
+  const scores = calculateScores();
   const maxScore = Math.max(...scores);
   const topIdx = scores.indexOf(maxScore);
   const t = TYPES[topIdx];
@@ -399,7 +461,21 @@ function showResult() {
         <p>${t.sessionDesc}</p>
       </div>
 
-      <div class="r-card">
+      <div class="cta-card">
+        <p>
+          <strong>「${t.session}」</strong>の詳細や<br>
+          あなたへの具体的なアプローチは<br>
+          <strong>無料体験セッション</strong>でお伝えしています。<br>
+          気軽にお申し込みください🩵
+        </p>
+      </div>
+
+      <button class="btn-main" style="background:linear-gradient(135deg,${t.color},${t.color}bb)"
+        onclick="window.open('YOUR_LINE_URL_HERE','_blank')">
+        🩵 無料体験セッションを申し込む
+      </button>
+
+      <div class="r-card" style="margin-top:4px;">
         <div class="r-card-title">✦ タイプ別スコア</div>
         ${TYPES.map((tp,i) => `
           <div class="score-row">
@@ -412,10 +488,6 @@ function showResult() {
         `).join('')}
       </div>
 
-      <button class="btn-main" style="background:linear-gradient(135deg,${t.color},${t.color}bb)"
-        onclick="window.open('YOUR_LINE_URL_HERE','_blank')">
-        🩵 無料体験セッションを申し込む
-      </button>
       <button class="btn-sub" onclick="retry()">もう一度診断する</button>
       <p class="footer-note">by にか 🩵</p>
     </div>
@@ -434,8 +506,7 @@ function showResult() {
 
 function retry() {
   cur = 0;
-  scores = [0,0,0,0,0,0,0,0];
-  locked = false;
+  answers = new Array(QUESTIONS.length).fill(null);
   document.getElementById('resultScreen').style.display = 'none';
   document.getElementById('startScreen').style.display = 'block';
   window.scrollTo(0,0);
